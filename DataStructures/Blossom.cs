@@ -53,25 +53,26 @@ namespace DataStructures
 
         private List<Guid> FindMatches(byte[] bytes)
         {
-            long[] hashes = GenerateHashes(bytes);
+            int[] hashes = GenerateHashes(bytes)
+                .Select(x => (int)x)
+                .ToArray();
 
-            List<Guid> filterIds = _filter[hashes[0]];
 
-            for (int i = 1; i < hashes.Length; i++)
+            var lists = hashes
+                .Select(k => _filter[k])
+                .ToArray();
+
+            if (lists.Length == 0)
+                return new List<Guid>();
+
+            var currentIds = lists[0];
+
+            for (int i = 1; i < lists.Length; i++)
             {
-                List<Guid> hashFilterIds = _filter[hashes[i]];
-                List<Guid> newHashes = new();
-
-                foreach (var id in filterIds)
-                {
-                    if (hashFilterIds.Contains(id))
-                    {
-                        newHashes.Add(id);
-                    }
-                }
+                currentIds = currentIds.Intersect(lists[i]).ToList();
             }
 
-            return filterIds;
+            return currentIds;
         }
 
         private long[] GenerateHashes(byte[] data)
